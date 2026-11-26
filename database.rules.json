@@ -1,0 +1,56 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$room": {
+        ".read": "auth != null && $room.matches(/^[0-9a-f]{32}$/)",
+        ".write": "auth != null && $room.matches(/^[0-9a-f]{32}$/) && !data.exists() && newData.child('settings/hostId').val() === auth.uid && newData.child('members').child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['settings', 'members']) && newData.child('members').child(newData.child('settings/hostId').val()).exists()",
+        "settings": {
+          ".validate": "newData.hasChildren(['hostId', 'startTime'])",
+          "hostId": {
+            ".validate": "newData.val() === auth.uid"
+          },
+          "startTime": {
+            ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)",
+            ".write": "auth != null && data.exists() && newData.isString() && root.child('rooms').child($room).child('settings/hostId').val() === auth.uid"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "members": {
+          "$uid": {
+            ".write": "auth != null && root.child('rooms').child($room).child('settings').exists() && (($uid === auth.uid && newData.exists()) || ($uid !== auth.uid && root.child('rooms').child($room).child('settings/hostId').val() === auth.uid && data.exists() && !newData.exists() && newData.parent().parent().child('nicknames').child('n:' + data.child('nickname').val().toLowerCase().replace('%', '%25').replace('.', '%2e').replace('#', '%23').replace('$', '%24').replace('/', '%2f').replace('[', '%5b').replace(']', '%5d')).val() !== $uid))",
+            ".validate": "auth != null && $uid === auth.uid && newData.hasChildren(['nickname', 'joinedAt', 'updatedAt', 'status']) && newData.child('updatedAt').val() === now && (data.exists() || newData.parent().parent().child('nicknames').child('n:' + newData.child('nickname').val().toLowerCase().replace('%', '%25').replace('.', '%2e').replace('#', '%23').replace('$', '%24').replace('/', '%2f').replace('[', '%5b').replace(']', '%5d')).val() === auth.uid)",
+            "nickname": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20 && newData.val().matches(/.*[^ ].*/) && (!data.exists() || newData.val() === data.val()) && !newData.val().matches(/^ .*/) && !newData.val().matches(/.* $/)"
+            },
+            "joinedAt": {
+              ".validate": "newData.isNumber() && ((!data.exists() && newData.val() === now) || newData.val() === data.val())"
+            },
+            "updatedAt": {
+              ".validate": "newData.isNumber() && newData.val() === now"
+            },
+            "status": {
+              ".validate": "newData.val() === 'yes' || newData.val() === 'maybe' || newData.val() === 'no'"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "nicknames": {
+          "$key": {
+            ".write": "auth != null && root.child('rooms').child($room).child('settings').exists() && ((newData.val() === auth.uid && (!data.exists() || data.val() === auth.uid)) || (!newData.exists() && data.isString() && data.val() !== auth.uid && root.child('rooms').child($room).child('settings/hostId').val() === auth.uid && root.child('rooms').child($room).child('members').child(data.val()).exists() && !newData.parent().parent().child('members').child(data.val()).exists()))",
+            ".validate": "auth != null && newData.val() === auth.uid && (!data.exists() || data.val() === auth.uid) && newData.parent().parent().child('members').child(auth.uid).child('nickname').isString() && $key === 'n:' + newData.parent().parent().child('members').child(auth.uid).child('nickname').val().toLowerCase().replace('%', '%25').replace('.', '%2e').replace('#', '%23').replace('$', '%24').replace('/', '%2f').replace('[', '%5b').replace(']', '%5d')"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

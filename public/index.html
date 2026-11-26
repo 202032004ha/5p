@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e19">
+  <meta name="description" content="닉네임 하나로 친구들과 오늘의 자랭 인원을 확인하세요.">
+  <meta property="og:title" content="자랭 모여">
+  <meta property="og:description" content="초대 링크로 모이고, 오늘 참여할 사람을 확인하세요.">
+  <title>자랭 모여</title>
+  <link rel="stylesheet" href="/styles.css?v=3">
+  <script type="module" src="/app.mjs?v=3"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>자랭 모여</span>
+      </a>
+      <a class="top-link" href="/" id="home-link" hidden>새 방 만들기</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero" id="hero">
+      <div class="hero-content">
+        <p class="hero-tag" id="hero-tag"><i aria-hidden="true"></i>5인 자유 랭크</p>
+        <h1 id="page-title" tabindex="-1">오늘 자랭, 모여?</h1>
+        <p class="hero-note" id="hero-note">시작 시간을 정하고 친구들에게 링크를 보내세요.</p>
+        <div class="hero-tools" id="hero-tools" hidden>
+          <div class="schedule"><span>매일 시작</span><strong id="start-time"></strong><span>KST</span></div>
+          <div class="share">
+            <button class="button button-share" type="button" id="copy-link">
+              <span class="copy-icon" aria-hidden="true"></span>초대 링크 복사
+            </button>
+            <p class="feedback copy-feedback" id="copy-feedback" role="status"></p>
+          </div>
+        </div>
+        <label class="manual-copy" id="manual-copy" hidden>초대 주소
+          <input id="invite-url" type="url" readonly>
+        </label>
+      </div>
+    </section>
+
+    <div class="layout" id="home-view">
+      <section class="panel action-panel" aria-labelledby="create-title">
+        <h2 id="create-title">자랭 방 만들기</h2>
+        <p class="panel-description">닉네임과 시작 시간을 입력하세요.</p>
+        <form id="create-form" aria-labelledby="create-title">
+          <label for="host-nickname">내 닉네임</label>
+          <input id="host-nickname" name="nickname" type="text" placeholder="예: 미드가고싶다" maxlength="20" autocomplete="nickname" required>
+          <label for="start-input">시작 시간 <span class="muted">한국 시간</span></label>
+          <input id="start-input" name="startTime" type="time" value="21:00" required>
+          <button type="submit" class="button primary">방 만들기</button>
+          <p class="feedback error" id="create-error" role="alert"></p>
+        </form>
+        <a class="recent" id="recent-room" href="/" hidden>최근 대기실 다시 열기</a>
+      </section>
+      <section class="panel main-panel" aria-labelledby="legend-title">
+        <div class="section-header">
+          <div><h2 id="legend-title">참여 상태</h2><p class="panel-description">오늘 자랭할 수 있는지 표시해 보세요.</p></div>
+        </div>
+        <ul class="status-legend" id="legend"></ul>
+        <p class="reset-note"><span class="clock-icon" aria-hidden="true"></span>매일 자정에 모든 참여 상태가 ‘안 한다’로 돌아가요.</p>
+      </section>
+    </div>
+
+    <div class="layout" id="room-view" hidden>
+      <section class="panel action-panel" aria-labelledby="actions-title">
+        <h2 id="actions-title">대기실 입장</h2>
+        <p class="panel-description" id="actions-description">닉네임을 입력하면 친구들에게 내 카드가 보여요.</p>
+        <form id="join-form" aria-labelledby="actions-title" hidden>
+          <label for="guest-nickname">내 닉네임</label>
+          <input id="guest-nickname" name="nickname" type="text" placeholder="예: 정글간다" maxlength="20" autocomplete="nickname" required>
+          <button type="submit" class="button primary">입장하기</button>
+          <p class="feedback error" id="join-error" role="alert"></p>
+        </form>
+        <div id="vote-actions" hidden>
+          <div class="status-actions" id="status-actions" role="group" aria-labelledby="actions-title"></div>
+          <p class="feedback" id="vote-feedback" role="status"></p>
+          <details id="time-settings" class="host-settings" hidden>
+            <summary id="time-settings-summary">시작 시간 변경</summary>
+            <form id="time-form">
+              <label for="new-start-time">새 시작 시간 <span class="muted">한국 시간</span></label>
+              <input id="new-start-time" name="startTime" type="time" required>
+              <button type="submit" class="button button-share">시간 저장</button>
+              <p class="feedback error" id="time-error" role="alert"></p>
+            </form>
+          </details>
+          <p class="feedback" id="time-feedback" role="status"></p>
+        </div>
+      </section>
+      <section class="panel main-panel roster-panel" aria-labelledby="roster-title">
+        <div class="section-header">
+          <div><h2 id="roster-title" tabindex="-1">참가 확정</h2><p class="panel-description" id="roster-summary"></p></div>
+          <span class="counter" id="counter"></span>
+        </div>
+        <p class="team-ready" id="team-ready" role="status"></p>
+        <ul class="roster" id="roster" aria-label="확정 참가자"></ul>
+        <section class="waiting-panel" aria-labelledby="waiting-title">
+          <div class="section-header">
+            <div><h3 id="waiting-title">대기실</h3><p class="panel-description" id="waiting-summary"></p></div>
+            <span class="counter counter-muted" id="waiting-counter"></span>
+          </div>
+          <ul class="roster" id="waiting-roster" aria-label="대기 참가자" hidden></ul>
+        </section>
+        <p class="feedback" id="room-action-feedback" role="status"></p>
+        <p class="reset-note"><span class="clock-icon" aria-hidden="true"></span>참여 상태는 한국 시간 자정에 초기화돼요.</p>
+      </section>
+    </div>
+
+    <section class="panel message-panel" id="message-view" hidden>
+      <p id="room-message" role="status">대기실 연결 중…</p>
+      <button type="button" class="button button-share" id="retry" hidden>다시 연결</button>
+      <a id="missing-home" href="/" hidden>새 방 만들기</a>
+    </section>
+    <footer><span class="footer-brand">자랭 모여</span><span>친구들과 쓰는 자유 랭크 대기실</span></footer>
+  </main>
+  <dialog id="remove-dialog" aria-labelledby="remove-title" aria-describedby="remove-description">
+    <h1 id="remove-title">참가자 내보내기</h1>
+    <p id="remove-description"></p>
+    <form id="remove-form" method="dialog">
+      <div class="dialog-actions">
+        <button class="button button-share" type="submit" value="cancel" id="cancel-remove" autofocus>취소</button>
+        <button class="button danger" type="submit" value="remove" id="confirm-remove">내보내기</button>
+      </div>
+      <p class="feedback error" id="remove-error" role="alert"></p>
+    </form>
+  </dialog>
+  <noscript><p class="wrap">대기실을 열려면 브라우저에서 JavaScript를 켜 주세요.</p></noscript>
+</body>
+</html>
